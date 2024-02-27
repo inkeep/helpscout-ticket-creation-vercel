@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# HelpScout Create Ticket Example
 
 ## Getting Started
 
-First, run the development server:
+Clone this repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/GeorgiyIzmailov/helpscout.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Setup dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Get application secrets
 
-## Learn More
+1. Login to HelpScout (accept the invite sent to your e-mail).
 
-To learn more about Next.js, take a look at the following resources:
+2. To test the repository you need to create an app on the platform. Open your profile picture then select **Your Profile**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Click on the **My Apps** tab.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+4. Create application by giving it an **App Name** and setting its **Redirection URL** to `http://localhost:3000/api/helpscout-webhook`.
 
-## Deploy on Vercel
+5. Copy the **App ID** and **App Secret** fields
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. Add the copied values to the `.env` file:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```bash
+...
+REACT_APP_CLIENT_ID="YOUR_CLIENT_ID";
+REACT_APP_SECRET_ID="YOUR_SECRET_ID";
+...
+```
+
+## Get a mailbox ID
+
+1. Open **Inbox** tab
+
+2. On left bottom corner open the **Inbox Settings** and select **Edit Inbox**
+
+3. Copy arbitrary numbers in the page URL:
+
+```bash
+https://secure.helpscout.net/settings/inbox/{YOUR_MAILBOX_ID}/
+```
+
+In our case, the mailbox ID is `320281`.
+
+It should also be added to the .env file:
+
+```bash
+...
+REACT_APP_MAILBOX_ID="YOUR_MAILBOX_ID";
+...
+```
+
+## Authorize application
+
+Authorize an application created on the HelpScout platform.
+
+Use the following commands:
+
+```bash
+npm run build && npm start
+```
+
+Click **Authorize the app** to authorize the app. (Required on every application restart)
+
+Click **Create Ticket ✨** to create a conversation/ticket.
+
+(You can modify conversation/ticket content in the `src/helper/const.ts`).
+
+## Routes
+
+`/api/helpscout-webhook` - Webhook use by helpscout to set applications tokens.
+
+`/api/create-support-ticket` - Create a new conversation/ticket in your inbox.
