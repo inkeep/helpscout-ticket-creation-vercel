@@ -14,19 +14,25 @@ Setup dependencies:
 pnpm install
 ```
 
-## Get application secrets
+Copy the example env file to make a `.env.development.local` for local development.
 
-1. Login to HelpScout (accept the invite sent to your e-mail).
+```bash
+cp .env.example .env.development.local
+```
 
-2. To test the repository you need to create an app on the platform. Open your profile picture then select **Your Profile**.
+## Create HelpScout application
+
+1. Login to HelpScout
+
+2. Open your profile picture then select **Your Profile**.
 
 3. Click on the **My Apps** tab.
 
-4. Create application by giving it an **App Name** and setting its **Redirection URL** to `http://localhost:3000/api/helpscout-webhook`.
+4. Create application by giving it an **App Name**. The **Redirection URL** can be any value, it's not used.
 
 5. Copy the **App ID** and **App Secret** fields
 
-6. Add the copied values to the `.env` file:
+6. Add the copied values to your environment variables:
 
 ```bash
 HELPSCOUT_APP_ID=<HELPSCOUT_APP_ID>
@@ -39,18 +45,16 @@ HELPSCOUT_APP_SECRET=<HELPSCOUT_APP_SECRET>
 
 2. On left bottom corner open the **Inbox Settings** and select **Edit Inbox**
 
-3. Copy arbitrary numbers in the page URL:
+3. Copy the ID from the page URL:
 
 ```bash
-https://secure.helpscout.net/settings/inbox/{YOUR_HELPSCOUT_MAILBOX_ID}/
+https://secure.helpscout.net/settings/inbox/{HELPSCOUT_MAILBOX_ID}/
 ```
 
-In our case, the mailbox ID is `320281`.
+Add it as an env variable:
 
-It should also be added to the .env file:
-
-```bash
-HELPSCOUT_MAILBOX_ID="YOUR_HELPSCOUT_MAILBOX_ID";
+```
+HELPSCOUT_MAILBOX_ID=<HELPSCOUT_MAILBOX_ID>
 ```
 
 ## Help Scout Access Tokens
@@ -63,7 +67,7 @@ Create an Edge Config storage instance for your project. See [here](https://verc
 EDGE_CONFIG_ID=<EDGE_CONFIG_ID>
 ```
 
-Creating an Edge Config will also automatically create an `EDGE_CONFIG` env variable in your project. This is used for reads using the `@vercel/edge-config` SDK.
+Creating an Edge Config will also automatically create an `EDGE_CONFIG` env variable in your Vercel project. This is used for reads using the `@vercel/edge-config` SDK.
 
 For local development, you can visit your project's **Settings** > **Environment Variables** and copy it.
 
@@ -83,5 +87,16 @@ Set it as env variable:
 VER_API_ACCESS_TOKEN=<VER_API_ACCESS_TOKEN>
 ```
 
-## Routes
+Lastly, set the Vercel Team ID for where your project is located. You can find this under **Settings** under your Team in the [Vercel dashboard](https://vercel.com)
+
+```
+VER_TEAM_ID=<VER_TEAM_ID>
+```
+
+## Run locally
+```
+pnpm dev
+```
+
+## API Routes
 `/api/create-support-ticket` - Create a new conversation/ticket in your inbox.

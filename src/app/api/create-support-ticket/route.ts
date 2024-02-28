@@ -1,7 +1,9 @@
 import { createConversationTicket } from "@/app/api/create-support-ticket/createConversationTicket";
-import { CreateConversationRequestBody } from "@/types/create-conversation.types";
+import { CreateConversationRequestBody } from "@/app/api/create-support-ticket/create-conversation.types";
 import { NextRequest, NextResponse } from "next/server";
 import { get } from "@vercel/edge-config";
+
+export const runtime = "edge"
 
 const HELP_SCOUT_TOKEN_KEY = "helpscout_access_token";
 

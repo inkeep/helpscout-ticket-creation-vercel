@@ -1,51 +1,51 @@
 import {
-    ConversationRequestData,
-    ConversationStatus,
-    ConversationType,
-    CreateConversationRequestBody
-} from "@/types/create-conversation.types";
-import serializeTicketContent from "./serializeConversationContent";
+    CreateConversationRequestBody,
+    Message
+} from "@/app/api/create-support-ticket/create-conversation.types";
 
-// Send POST request to Help Scout API
+// Create a conversation with the Help Scout API
 export async function createConversationTicket(
   body: CreateConversationRequestBody,
   accessToken: string
 ) {
-  const { ai_annotations, form_details, chat_session } = body;
+  const { form_details, chat_session } = body;
 
-  // API endpoint for creating conversations
-  const urlCreateConversations = "https://api.helpscout.net/v2/conversations";
+  if (!process.env.HELPSCOUT_MAILBOX_ID) throw new Error("HELPSCOUT_MAILBOX_ID is undefined");
+  const mailboxId = parseInt(process.env.HELPSCOUT_MAILBOX_ID, 10);
 
-  // Mailbox ID from environment variable
-  const mailboxId = +process.env.HELPSCOUT_MAILBOX_ID!;
+  const initThreadMessage = chat_session.messages[0].content; // subject of the conversation
 
-  // Prepare data for creating a conversation
-  const data: ConversationRequestData = {
-    subject: ai_annotations.question_summary,
+  const data = {
+    subject: initThreadMessage,
     customer: {
       email: form_details.email,
-      firstName: form_details.name,
+      firstName: form_details.first_name,
     },
     mailboxId,
-    type: ConversationType.Email, // Conversation type: Email
-    status: ConversationStatus.Active, // Conversation status: Active
+    type: 'email', 
+    status: 'active', 
     threads: [
-      {
+      { // shows as initial message of conversation
         type: "customer",
         customer: {
           email: form_details.email,
         },
-        text: serializeTicketContent(
-          // Serialize conversation content
-          ai_annotations,
-          form_details,
-          chat_session
-        ),
+        text: `
+          ${formatAdditionalDetails(form_details.additional_details)}
+          ${formatChatHistory(chat_session.messages)}
+        `
       },
+      { // internal facing details
+        type: "note",
+        text: `
+          <h4> Inkeep AI Chat Session ID </h4>
+          <p> ${chat_session.chat_session_id} </p>
+        `,
+      }
     ],
   };
 
-  return fetch(urlCreateConversations, {
+  const res = await fetch("https://api.helpscout.net/v2/conversations", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -53,4 +53,39 @@ export async function createConversationTicket(
     },
     body: JSON.stringify(data),
   });
+
+  const conversationId = res.headers.get("Resource-ID");
+
+  if (!res.ok || !conversationId) {
+    throw new Error(`Failed to create conversation: ${res.statusText}`);
+  }
+
+  return res
+}
+
+function formatChatHistory(messages: Message[]): string {
+  let formattedHistory = "<h4 style='margin-bottom: .4rem;'><u> Chat History </u></h4>";
+
+  messages.forEach((message) => {
+    // Determine if the message is from User or AI Assistant
+    if (message.role === "user") {
+      formattedHistory += "<h6 style='font-size: .9rem;'> Question </h6>";
+    } else {
+      formattedHistory += "<h6 style='font-size: .9rem;'> Answer </h6>";
+    }
+
+    // Add message content
+    formattedHistory += `<p> ${message.content} </p><br/>`;
+  });
+
+  return formattedHistory;
+}
+
+function formatAdditionalDetails(additionalDetails: string | undefined): string | undefined {
+  const formattedDetails = `
+    <h4><u> Additional Details </u></h4>
+    <p> ${additionalDetails} </p>
+    <br>
+  `
+  return additionalDetails ? formattedDetails : undefined;
 }
