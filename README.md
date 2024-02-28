@@ -2,6 +2,7 @@
 
 ## Getting Started
 
+### From Scratch
 Clone this repository:
 
 ```bash
@@ -19,6 +20,12 @@ Copy the example env file to make a `.env.development.local` for local developme
 ```bash
 cp .env.example .env.development.local
 ```
+
+### Add to an existing project
+If you'd like to add an API route to an existing Next.js project:
+1. copy the files under `api/create-support-ticket` into your own API route.
+2. install `pnpm add @vercel/edge-config`
+3. Follow the rest of these instructions to get the .env variables you need
 
 ## Create HelpScout application
 
