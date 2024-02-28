@@ -23,7 +23,6 @@ export type ChatSession = {
 
 type Client = {
   current_url: string;
-  type: string;
 };
 
 export type CreateConversationRequestBody = {

@@ -8,7 +8,7 @@ export async function createConversationTicket(
   body: CreateConversationRequestBody,
   accessToken: string
 ) {
-  const { form_details, chat_session } = body;
+  const { form_details, chat_session, client } = body;
 
   if (!process.env.HELPSCOUT_MAILBOX_ID) throw new Error("HELPSCOUT_MAILBOX_ID is undefined");
   const mailboxId = parseInt(process.env.HELPSCOUT_MAILBOX_ID, 10);
@@ -40,6 +40,9 @@ export async function createConversationTicket(
         text: `
           <h4> Inkeep AI Chat Session ID </h4>
           <p> ${chat_session.chat_session_id} </p>
+          </br>
+          <h4> Client (Interaction Point)</h4>
+          <p> ${client.current_url} </p>
         `,
       }
     ],
