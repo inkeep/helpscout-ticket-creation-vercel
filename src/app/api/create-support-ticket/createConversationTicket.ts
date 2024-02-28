@@ -24,7 +24,7 @@ export async function createConversationTicket(
   const urlCreateConversations = "https://api.helpscout.net/v2/conversations";
 
   // Mailbox ID from environment variable
-  const mailboxId = +process.env.REACT_APP_MAILBOX_ID!;
+  const mailboxId = +process.env.HELPSCOUT_MAILBOX_ID!;
 
   // Prepare data for creating a conversation
   const data: ConversationRequestData = {

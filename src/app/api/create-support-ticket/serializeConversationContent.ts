@@ -2,7 +2,7 @@ import {
     AIAnnotations,
     ChatSession,
     FormDetails,
-  } from "../types/create-conversation.types";
+  } from "../../../types/create-conversation.types";
   
   /**
    * Serialize ticket content based on AI annotations, form details, and chat session.

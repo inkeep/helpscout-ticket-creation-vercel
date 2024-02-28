@@ -11,7 +11,7 @@ git clone https://github.com/GeorgiyIzmailov/helpscout.git
 Setup dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Get application secrets
@@ -29,10 +29,8 @@ npm install
 6. Add the copied values to the `.env` file:
 
 ```bash
-...
-REACT_APP_CLIENT_ID="YOUR_CLIENT_ID";
-REACT_APP_SECRET_ID="YOUR_SECRET_ID";
-...
+HELPSCOUT_APP_ID=<HELPSCOUT_APP_ID>
+HELPSCOUT_APP_SECRET=<HELPSCOUT_APP_SECRET>
 ```
 
 ## Get a mailbox ID
@@ -44,7 +42,7 @@ REACT_APP_SECRET_ID="YOUR_SECRET_ID";
 3. Copy arbitrary numbers in the page URL:
 
 ```bash
-https://secure.helpscout.net/settings/inbox/{YOUR_MAILBOX_ID}/
+https://secure.helpscout.net/settings/inbox/{YOUR_HELPSCOUT_MAILBOX_ID}/
 ```
 
 In our case, the mailbox ID is `320281`.
@@ -52,29 +50,12 @@ In our case, the mailbox ID is `320281`.
 It should also be added to the .env file:
 
 ```bash
-...
-REACT_APP_MAILBOX_ID="YOUR_MAILBOX_ID";
-...
+HELPSCOUT_MAILBOX_ID="YOUR_HELPSCOUT_MAILBOX_ID";
 ```
 
-## Authorize application
-
-Authorize an application created on the HelpScout platform.
-
-Use the following commands:
-
-```bash
-npm run build && npm start
-```
-
-Click **Authorize the app** to authorize the app. (Required on every application restart)
-
-Click **Create Ticket ✨** to create a conversation/ticket.
-
-(You can modify conversation/ticket content in the `src/helper/const.ts`).
+## Vercel Edge Config
+HelpScout access tokens received via client-credentials (service-to-service authentication) expire after two days. In order to the token in a cache, we'll leverage Vercel's Edge Config which is optimized for high-read, low-write scenarios.
 
 ## Routes
-
-`/api/helpscout-webhook` - Webhook use by helpscout to set applications tokens.
 
 `/api/create-support-ticket` - Create a new conversation/ticket in your inbox.
