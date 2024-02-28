@@ -1,5 +1,5 @@
 import { createConversationTicket } from "./createConversationTicket";
-import { CreateConversationRequestBody } from "./create-conversation.types";
+import { CreateConversationRequestBody, CreateConversationRequestBodySchema, InvalidRequest } from "./requestSchemaValidation";
 import { NextRequest, NextResponse } from "next/server";
 import { get } from "@vercel/edge-config";
 
@@ -88,6 +88,7 @@ const getNewClientCredentialsToken = async (): Promise<string> => {
   }
 };
 
+// get access token - gets from Vercel Edge Config cache or gets a new one from HelpScout
 const getAccessToken = async () => {
   try {
     let accessToken = (await get(HELP_SCOUT_TOKEN_KEY)) as undefined | string;
@@ -103,17 +104,35 @@ const getAccessToken = async () => {
   }
 };
 
+const originHeaders ={
+  "Access-Control-Allow-Origin": "*", // set specific to your clients
+  "Access-Control-Allow-Methods": "OPTIONS, POST",
+  "Access-Control-Allow-Headers": "Content-Type",
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: originHeaders
+  });
+}
+
 export async function POST(req: NextRequest & CreateConversationRequestBody) {
+
   try {
-    // Parse the request body
-    const body: CreateConversationRequestBody = await req.json();
+    const validatedBody = CreateConversationRequestBodySchema.safeParse(await req.json());
+    
+    if (!validatedBody.success) {
+      throw new InvalidRequest("Request schema invalid: " + JSON.stringify(validatedBody.error));
+    }
+    const body = validatedBody.data;
 
     const accessToken = await getAccessToken();
 
     // try creating conversation
     let response = await createConversationTicket(body, accessToken);
 
-    // token is expired
+    // if token is expired
     if (response.status == 401) {
       await getNewClientCredentialsToken();
       response = await createConversationTicket(body, accessToken);
@@ -128,13 +147,31 @@ export async function POST(req: NextRequest & CreateConversationRequestBody) {
     return new NextResponse(null, {
       status: 200,
       statusText: "OK",
+      headers: originHeaders
     });
   } catch (error) {
-    // Log and return error response
-    console.error(error);
-    return new NextResponse(null, {
-      status: 500,
-      statusText: "Internal error",
-    });
+    // Check if user validation error
+    if (error instanceof InvalidRequest){
+      return new NextResponse(JSON.stringify({
+        error: {
+          type: "InvalidRequest",
+          message: error.message
+        }
+      }), {
+        status: 400,
+        statusText: "Bad Request",
+        headers: {
+          "Content-Type": "application/json",
+          ...originHeaders
+        },
+      });
+    } else {
+      console.error(error);
+      return new NextResponse(null, {
+        status: 500,
+        statusText: "Internal Server Error",
+        headers: originHeaders
+      });
+    }
   }
 }
