@@ -1,4 +1,3 @@
-import tokenDataMap from "@/static/data";
 import {
     ConversationRequestData,
     ConversationStatus,
@@ -9,15 +8,9 @@ import serializeTicketContent from "./serializeConversationContent";
 
 // Send POST request to Help Scout API
 export async function createConversationTicket(
-  body: CreateConversationRequestBody
+  body: CreateConversationRequestBody,
+  accessToken: string
 ) {
-  // Auth token from environment variable
-  const authToken = tokenDataMap.get("accessToken");
-
-  if (!authToken) {
-    throw new Error("Missing access token!");
-  }
-
   const { ai_annotations, form_details, chat_session } = body;
 
   // API endpoint for creating conversations
@@ -56,7 +49,7 @@ export async function createConversationTicket(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${authToken}`, // Include Basic Auth header
+      Authorization: `Bearer ${accessToken}`, // Include Basic Auth header
     },
     body: JSON.stringify(data),
   });

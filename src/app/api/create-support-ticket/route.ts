@@ -1,47 +1,59 @@
 import { createConversationTicket } from "@/app/api/create-support-ticket/createConversationTicket";
-import tokenDataMap from "@/static/data";
 import { CreateConversationRequestBody } from "@/types/create-conversation.types";
 import { NextRequest, NextResponse } from "next/server";
-import { get } from '@vercel/edge-config';
+import { get } from "@vercel/edge-config";
 
 const HELP_SCOUT_TOKEN_KEY = "helpscout_access_token";
 
 // Set access token in Vercel Edge Config using Vercel API
 const setAccessTokenInEdgeConfig = async (accessToken: string) => {
-  const edgeConfigId = process.env.VERCEL_EDGE_CONFIG_ID;
-  const vercelApiToken = process.env.VERCEL_API_ACCESS_TOKEN;
+  const edgeConfigId = process.env.EDGE_CONFIG_ID;
+  const vercelApiToken = process.env.VER_API_ACCESS_TOKEN;
+  const vercelTeamId = process.env.VER_TEAM_ID;
 
   if (!edgeConfigId || !vercelApiToken) {
     throw new Error("Vercel Edge Config ID or Vercel API Token not found");
   }
 
-  const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
-    method: "PATCH",
-    headers: {
-      "Authorization": `Bearer ${vercelApiToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      items: [
-        { "operation": "update", "key": HELP_SCOUT_TOKEN_KEY, "value": accessToken }
-      ]
-    }),
-  });
+  const exists = (await get(HELP_SCOUT_TOKEN_KEY)) as undefined | string;
+
+  const response = await fetch(
+    `https://api.vercel.com/v1/edge-config/${edgeConfigId}/items?teamId=${vercelTeamId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${vercelApiToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            operation: exists ? "update" : "create",
+            key: HELP_SCOUT_TOKEN_KEY,
+            value: accessToken,
+          },
+        ],
+      }),
+    }
+  );
 
   const responseData = await response.json();
 
-  if (response.status !== 200 || responseData.status !== "OK") {
-    throw new Error(`Failed to write HelpScout access token to Vercel Edge Config: ${response.statusText} - ${JSON.stringify(responseData)}`);
+  if (response.status !== 200 || responseData.status !== "ok") {
+    throw new Error(
+      `Failed to write HelpScout access token to Vercel Edge Config: ${response.statusText
+      } - ${JSON.stringify(responseData)}`
+    );
   }
 };
 
 // Get access token using client credentials and store it in Vercel Edge Config
-const getNewClientCredentialsToken = async () => {
+const getNewClientCredentialsToken = async (): Promise<string> => {
   try {
     const client_id = process.env.HELPSCOUT_APP_ID;
     const client_secret = process.env.HELPSCOUT_APP_SECRET;
 
-    if(!client_id || !client_secret) {
+    if (!client_id || !client_secret) {
       throw new Error("Client ID or Client Secret not found");
     }
 
@@ -60,7 +72,9 @@ const getNewClientCredentialsToken = async () => {
     const responseData = await response.json();
 
     if (response.status !== 200) {
-      throw new Error(`Failed to obtain access token: ${response.statusText} - ${responseData}`);
+      throw new Error(
+        `Failed to obtain access token: ${response.statusText} - ${responseData}`
+      );
     }
 
     setAccessTokenInEdgeConfig(responseData.access_token);
@@ -74,7 +88,7 @@ const getNewClientCredentialsToken = async () => {
 
 const getAccessToken = async () => {
   try {
-    let accessToken = get(HELP_SCOUT_TOKEN_KEY); // get from Vercel Edge Config
+    let accessToken = (await get(HELP_SCOUT_TOKEN_KEY)) as undefined | string;
 
     if (!accessToken) {
       accessToken = await getNewClientCredentialsToken();
@@ -85,7 +99,7 @@ const getAccessToken = async () => {
     console.error(error);
     throw error;
   }
-}
+};
 
 export async function POST(req: NextRequest & CreateConversationRequestBody) {
   try {
@@ -95,12 +109,12 @@ export async function POST(req: NextRequest & CreateConversationRequestBody) {
     const accessToken = await getAccessToken();
 
     // try creating conversation
-    let response = await createConversationTicket(body);
+    let response = await createConversationTicket(body, accessToken);
 
     // token is expired
     if (response.status == 401) {
       await getNewClientCredentialsToken();
-      response = await createConversationTicket(body);
+      response = await createConversationTicket(body, accessToken);
     }
 
     // throw unsuccessful requests
@@ -110,8 +124,8 @@ export async function POST(req: NextRequest & CreateConversationRequestBody) {
 
     // Return success response
     return new NextResponse(null, {
-      status: response.status,
-      statusText: "Support ticket created successfully",
+      status: 200,
+      statusText: "OK",
     });
   } catch (error) {
     // Log and return error response

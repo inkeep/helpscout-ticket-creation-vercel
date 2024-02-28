@@ -53,9 +53,35 @@ It should also be added to the .env file:
 HELPSCOUT_MAILBOX_ID="YOUR_HELPSCOUT_MAILBOX_ID";
 ```
 
-## Vercel Edge Config
-HelpScout access tokens received via client-credentials (service-to-service authentication) expire after two days. In order to the token in a cache, we'll leverage Vercel's Edge Config which is optimized for high-read, low-write scenarios.
+## Help Scout Access Tokens
+HelpScout access tokens received via client-credentials (service-to-service authentication) expire after two days. In order to store the token so it's not fetched on every request, we'll leverage Vercel's Edge Config which is optimized for high-read, low-write scenarios. To use it:
+
+### Create Edge Config
+Create an Edge Config storage instance for your project. See [here](https://vercel.com/docs/storage/edge-config/get-started#quickstart). Copy the `ID` and add it as an env variable:
+
+```
+EDGE_CONFIG_ID=<EDGE_CONFIG_ID>
+```
+
+Creating an Edge Config will also automatically create an `EDGE_CONFIG` env variable in your project. This is used for reads using the `@vercel/edge-config` SDK.
+
+For local development, you can visit your project's **Settings** > **Environment Variables** and copy it.
+
+Set it as an env variable:
+
+```
+EDGE_CONFIG=<EDGE_CONFIG>
+```
+
+### Vercel API Access Token
+
+Next, create a Vercel API access token. See [here](https://vercel.com/docs/rest-api#creating-an-access-token). This is used to write to the edge config.
+
+Set it as env variable:
+
+```
+VER_API_ACCESS_TOKEN=<VER_API_ACCESS_TOKEN>
+```
 
 ## Routes
-
 `/api/create-support-ticket` - Create a new conversation/ticket in your inbox.
