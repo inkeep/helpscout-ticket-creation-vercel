@@ -105,6 +105,13 @@ Lastly, set the Vercel Team ID for where your project is located. You can find t
 VER_TEAM_ID="<VER_TEAM_ID>"
 ```
 
+## Inkeep Preview URL (optional)
+If you'd like to attach a link to the Inkeep Dashboard view of the AI-chat for reference, then set the following:
+```
+INKEEP_CHAT_PREVIEW_ROOT=https://portal.inkeep.com/<ORG_ALIAS>/projects/<PROJECT_ID>/chat/sandbox
+```
+This will be added as an internal-facing note to the supprot conversation.
+
 ## Run locally
 ```
 pnpm dev

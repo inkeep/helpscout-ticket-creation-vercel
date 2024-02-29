@@ -1,7 +1,7 @@
 import {
-    CreateConversationRequestBody,
-    Message,
-    InvalidRequest
+  CreateConversationRequestBody,
+  Message,
+  InvalidRequest
 } from "./requestSchemaValidation";
 
 function formatItem(label: string, content: string | undefined | null): string {
@@ -13,7 +13,7 @@ function formatItem(label: string, content: string | undefined | null): string {
 }
 
 function formatChatHistory(messages: Message[] | undefined | null): string {
-  if(!messages) return "";
+  if (!messages) return "";
 
   let formattedHistory = "<h4 style='margin-bottom: .4rem;'><u> Chat History </u></h4>";
 
@@ -25,8 +25,9 @@ function formatChatHistory(messages: Message[] | undefined | null): string {
       formattedHistory += "<h6 style='font-size: .9rem;'> Answer </h6>";
     }
 
-    // Add message content
-    formattedHistory += `<p> ${message.content} </p><br/>`;
+    // Strip footnotes [^1] from the message content
+    const cleanContent = message.content ? message.content.replace(/\[\^(\d+)\]/g, '') : '';
+    formattedHistory += `<p> ${cleanContent} </p><br/>`;
   });
 
   return formattedHistory;
@@ -45,7 +46,10 @@ export async function createConversationTicket(
   const hasInitialMessage = chatSession && chatSession.messages.length > 0;
   const subject = hasInitialMessage ? chatSession?.messages[0].content : formDetails.additionalDetails  // subject of the conversation
 
-  if(!subject) throw new InvalidRequest("Please provide at least one user message or additional details");
+  if (!subject) throw new InvalidRequest("Please provide at least one user message or additional details");
+  const inkeepViewChatUrl = chatSession?.chatSessionId && process.env.INKEEP_CHAT_PREVIEW_ROOT
+    ? `${process.env.INKEEP_CHAT_PREVIEW_ROOT}?chatId=${chatSession.chatSessionId}`
+    : null;
 
   const data = {
     subject,
@@ -54,8 +58,8 @@ export async function createConversationTicket(
       firstName: formDetails.firstName,
     },
     mailboxId,
-    type: 'email', 
-    status: 'active', 
+    type: 'email',
+    status: 'active',
     threads: [
       { // shows as initial message of conversation
         type: "customer",
@@ -70,7 +74,7 @@ export async function createConversationTicket(
       { // internal facing details
         type: "note",
         text: `
-          ${formatItem("Inkeep AI Chat Session ID", chatSession?.chatSessionId)}
+          ${formatItem("Inkeep Chat URL", inkeepViewChatUrl)}
           ${formatItem("Client (Interaction Point)", client.currentUrl)}
         `,
       }
